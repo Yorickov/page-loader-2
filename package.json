@@ -1,0 +1,64 @@
+{
+  "name": "page-loader-2",
+  "version": "0.1.0",
+  "description": "CLI-app load html page on url into selected directory",
+  "main": "dist/index.js",
+  "bin": {
+    "page-loader-2": "dist/bin/page-loader-2.js"
+  },
+  "engines": {
+    "node": ">=8"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "test": "jest",
+    "eslint": "eslint",
+    "watch": "jest --watch",
+    "babel-node": "babel-node",
+    "build": "NODE_ENV=production babel src --out-dir dist --source-maps inline",
+    "prepublishOnly": "npm run build"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testPathIgnorePatterns": [
+      "<rootDir>/node_modules/",
+      "<rootDir>/__tests__/__fixtures__/"
+    ],
+    "verbose": true,
+    "coverageReporters": [
+      "lcov"
+    ],
+    "collectCoverage": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Yorickov/page-loader-2.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Yorickov/page-loader-2/issues"
+  },
+  "homepage": "https://github.com/Yorickov/page-loader-2#readme",
+  "devDependencies": {
+    "@babel/cli": "^7.2.3",
+    "@babel/core": "^7.2.2",
+    "@babel/node": "^7.2.2",
+    "@babel/preset-env": "^7.3.1",
+    "babel-eslint": "^10.0.1",
+    "babel-jest": "^24.0.0",
+    "eslint": "^5.13.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-plugin-babel": "^5.3.0",
+    "eslint-plugin-import": "^2.16.0",
+    "eslint-plugin-jest": "^22.2.2",
+    "jest": "^24.0.0",
+    "jest-cli": "^24.0.0"
+  },
+  "dependencies": {
+    "debug": "^4.1.1"
+  }
+}
