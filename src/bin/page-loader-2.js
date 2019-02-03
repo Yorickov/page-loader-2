@@ -12,10 +12,12 @@ program
   .description(description)
   .arguments('<url>')
   .option('-o, --output [directory]', 'download url into directory [output]')
-  .action((url, option) => pageLoader(url, option.output)
-    .catch((err) => {
+  .action(async (url, option) => {
+    try {
+      await pageLoader(url, option.output);
+    } catch (err) {
       errorHandler(err);
       process.exit(1);
-    }));
-
+    }
+  });
 program.parse(process.argv);

@@ -10,12 +10,11 @@ import Listr from 'listr';
 import {
   errorHandler,
   buildRelativeLink,
-  builAbsoluteLink,
+  buildAbsoluteLink,
   isValideLink,
 } from './utils';
 
 const { promises } = fs;
-
 const log = debug('page-loader-2');
 
 const makeAssetsName = link => link
@@ -31,6 +30,9 @@ const makeHtmlAndFolder = (urlStr) => {
   const htmlDir = `${getPath}_files`;
   return { htmlPageName, htmlDir };
 };
+
+const requestPromise = (urlQuery, options) => axios.get(urlQuery, options);
+const writeHtml = (html, pathToHtml) => promises.writeFile(pathToHtml, html);
 
 const tagsMapping = {
   script: 'src',
@@ -54,63 +56,58 @@ const getLinks = (html, urlHost) => {
   return _.uniq(_.flatten(refs));
 };
 
-const replaceLink = (link, contentHtml, pathToHtml, htmlDir) => {
-  const replacer = new RegExp(link, 'g');
+const replaceLink = (link, contentHtml, htmlDir) => {
   const pathReplace = path.join(htmlDir, makeAssetsName(buildRelativeLink(link)));
-  const newHtml = contentHtml.replace(replacer, pathReplace);
-
+  const newHtml = contentHtml.replace(new RegExp(link, 'g'), pathReplace);
   log(`html updated, old link: ${link}, new link: ${pathReplace}`);
   return newHtml;
 };
 
-const requestPromise = (urlQuery, options) => axios.get(urlQuery, options);
-
-const getResourses = (contentHtml, urlQuery, pathToAssets, pathToHtml, htmlDir) => {
+const getResourses = async (contentHtml, urlQuery, pathToAssets, htmlDir) => {
   const links = getLinks(contentHtml, urlQuery);
   let html = contentHtml;
 
   log(`start downloading resourses from url: ${urlQuery}`);
-  return Promise.all(links.map((link) => {
-    const absLink = builAbsoluteLink(link, urlQuery);
+  await Promise.all(links.map(async (link) => {
+    const absLink = buildAbsoluteLink(link, urlQuery);
     const pathToResourse = path.join(pathToAssets, makeAssetsName(buildRelativeLink(link)));
-    return new Listr([
-      {
-        title: `Downloading resourse ${absLink}`,
-        task: () => requestPromise(absLink, { responseType: 'stream' })
-          .then(({ data }) => {
-            html = replaceLink(link, html, pathToHtml, htmlDir);
-            return data.pipe(fs.createWriteStream(pathToResourse));
-          })
-          .then(() => log(`resourse ${link} written to path: ${pathToResourse}`)),
-      }])
-      .run()
-      .catch(err => errorHandler(err, log, absLink));
-  }))
-    .then(() => {
-      log('dowloading completed, start writing html');
-      return html;
-    });
+
+    const task = async () => {
+      const { data } = await requestPromise(absLink, { responseType: 'stream' });
+      html = replaceLink(link, html, htmlDir);
+      data.pipe(fs.createWriteStream(pathToResourse));
+      log(`resourse ${link} written to path: ${pathToResourse}`);
+    };
+
+    try {
+      await new Listr([{ title: `Downloading resourse ${absLink}`, task }]).run();
+    } catch (err) {
+      errorHandler(err, log, absLink);
+    }
+  }));
+
+  log('dowloading completed, start writing html');
+  return html;
 };
 
-const loadResourses = ({ data }, urlQuery, pathToAssets, pathToHtml, htmlDir) => promises
-  .mkdir(pathToAssets).then(() => {
-    log(`got html end create folder for assets on path: ${pathToAssets}`);
-    return getResourses(data, urlQuery, pathToAssets, pathToHtml, htmlDir);
-  });
+const loadResourses = async ({ data }, urlQuery, pathToAssets, htmlDir) => {
+  await promises.mkdir(pathToAssets);
+  log(`got html end create folder for assets on path: ${pathToAssets}`);
+  return getResourses(data, urlQuery, pathToAssets, htmlDir);
+};
 
-const writeHtml = (html, pathToHtml) => promises.writeFile(pathToHtml, html);
-
-export default (urlQuery, pathToDir = path.resolve('temp')) => {
+export default async (urlQuery, pathToDir = path.resolve('temp')) => {
   log('START');
-  const { htmlPageName, htmlDir } = makeHtmlAndFolder(urlQuery);
-  const pathToHtml = path.resolve(pathToDir, htmlPageName);
-  const pathToAssets = path.resolve(pathToDir, htmlDir);
-  return requestPromise(urlQuery)
-    .then(res => loadResourses(res, urlQuery, pathToAssets, pathToHtml, htmlDir))
-    .then(html => writeHtml(html, pathToHtml))
-    .then(() => log(`SUCCESS! Download from ${urlQuery} completed, path-page: ${pathToHtml} path-resourses: ${pathToAssets}`))
-    .catch((err) => {
-      errorHandler(err, log, urlQuery);
-      return Promise.reject(err);
-    });
+  try {
+    const { htmlPageName, htmlDir } = makeHtmlAndFolder(urlQuery);
+    const pathToHtml = path.resolve(pathToDir, htmlPageName);
+    const pathToAssets = path.resolve(pathToDir, htmlDir);
+    const html = await requestPromise(urlQuery);
+    const updatedHtml = await loadResourses(html, urlQuery, pathToAssets, htmlDir);
+    await writeHtml(updatedHtml, pathToHtml);
+    return log(`SUCCESS! Download from ${urlQuery} completed, path-page: ${pathToHtml} path-resourses: ${pathToAssets}`);
+  } catch (err) {
+    errorHandler(err, log, urlQuery);
+    return Promise.reject(err);
+  }
 };

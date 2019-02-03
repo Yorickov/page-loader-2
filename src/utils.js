@@ -21,7 +21,7 @@ export const buildRelativeLink = (link) => {
   return pathname;
 };
 
-export const builAbsoluteLink = (link, urlHost) => {
+export const buildAbsoluteLink = (link, urlHost) => {
   const { host } = url.parse(link);
   return host ? link : `${urlHost}${link}`;
 };

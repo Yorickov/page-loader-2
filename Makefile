@@ -6,7 +6,7 @@ build:
 	npm run build
 
 loader:
-	DEBUG=page-loader-2 page-loader-2 --output /var/tmp https://hexlet.io/courses
+	DEBUG='page-loader-2' page-loader-2 --output /var/tmp https://hexlet.io/courses
 
 index:
 	npx babel-node -- src/index.js
