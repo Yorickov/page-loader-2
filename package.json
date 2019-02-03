@@ -1,6 +1,6 @@
 {
   "name": "page-loader-2",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "CLI-app load html page on url into selected directory",
   "main": "dist/index.js",
   "bin": {
@@ -48,6 +48,7 @@
     "@babel/core": "^7.2.2",
     "@babel/node": "^7.2.2",
     "@babel/preset-env": "^7.3.1",
+    "babel-core": "^7.0.0-bridge.0",
     "babel-eslint": "^10.0.1",
     "babel-jest": "^24.0.0",
     "eslint": "^5.13.0",
@@ -55,10 +56,17 @@
     "eslint-plugin-babel": "^5.3.0",
     "eslint-plugin-import": "^2.16.0",
     "eslint-plugin-jest": "^22.2.2",
+    "eslint-plugin-lodash-fp": "^2.2.0-a1",
     "jest": "^24.0.0",
-    "jest-cli": "^24.0.0"
+    "jest-cli": "^24.0.0",
+    "nock": "^10.0.6"
   },
   "dependencies": {
-    "debug": "^4.1.1"
+    "axios": "^0.18.0",
+    "cheerio": "^1.0.0-rc.2",
+    "commander": "^2.19.0",
+    "debug": "^4.1.1",
+    "listr": "^0.14.3",
+    "lodash": "^4.17.11"
   }
 }
